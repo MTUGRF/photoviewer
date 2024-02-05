@@ -2,7 +2,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Sanborn Building Image Viewer Beta</title>
+  <title>Sanborn Building Image Viewer Beta</title>  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/openseadragon@4.1.0/build/openseadragon/openseadragon.min.js"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.28/"></script>
   <style>
     /*Map container*/
 #viewDiv {
@@ -19,7 +24,8 @@
  }  
 
  #offcanvasRight {
- 	width: 50%;
+  width: 50%;
+  margin-top: 56px;
  }   
 
  .responsive {
@@ -27,7 +33,19 @@
   height: auto;
 }
 
+.navbar {
+  height: 56px !important;
+  --bs-navbar-padding-y: 0 !important;
 
+}
+
+.navbar-brand {
+  color: white;
+}
+
+.bg-body-tertiary {
+  background-color: #363636 !important; 
+}
 
 @keyframes pulseAnimation {
   0% {
@@ -55,12 +73,6 @@
 }ion: absolute;
   }
   </style>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/openseadragon@4.1.0/build/openseadragon/openseadragon.min.js"></script>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
-  <script src="https://js.arcgis.com/4.28/"></script>
-
   <script>
   require([
     "esri/config",
@@ -78,9 +90,10 @@
   const viewer = OpenSeadragon({
     id: "openseadragon1",
     prefixUrl: "https://cdn.jsdelivr.net/npm/openseadragon@2.4/build/openseadragon/images/",
+    maxZoomLevel: null, 
     tileSources: {
       type: "image",
-      url: "https://cchi-iif.mtu.edu/iiif/3/OBECTID3.jpg/0,0,1800,1800/max/0/default.jpg"
+      url: "https://cchi-iif.mtu.edu/iiif/3/OBECTID18.jpg/full/max/0/default.jpg"
     },   
   });
 
@@ -93,29 +106,38 @@
   const view = new MapView({
     container: "viewDiv",
     map: map,
-    center: [-88.442590, 47.237003],
+    center: [-88.461825, 47.246305],
     zoom: 19
   });
   
-  const footprints_1917 = new FeatureLayer({
-    url: "https://portal1-geo.sabu.mtu.edu/server/rest/services/Hosted/sanborn_footprints_1917_images/FeatureServer/0",
+  const footprints_1908 = new FeatureLayer({
+    url: "https://portal1-geo.sabu.mtu.edu/server/rest/services/Hosted/sanborn_1908_footprints_with_image_coords/FeatureServer/0",
     popupEnabled: true,
     outFields: ["*"]
   });
 
-  map.add(footprints_1917, 1);
+  map.add(footprints_1908, 1);
 
-  const sanborn_1917 = new TileLayer({
-    url: "https://portal1-geo.sabu.mtu.edu:6443/arcgis/rest/services/KeweenawHSDI/KeTT_1917_FIPS/MapServer"
+  const sanborn_1908 = new TileLayer({
+    url: "https://portal1-geo.sabu.mtu.edu:6443/arcgis/rest/services/KeweenawHSDI/KeTT_1908_FIPS/MapServer"
   });
 
-  map.add(sanborn_1917, 0);
+  map.add(sanborn_1908, 0);
 
   // Create a popup template for the photos layer
-  footprints_1917.popupTemplate = {
+  footprints_1908.popupTemplate = {
     title:'footprint',
     content: "Description"    
   };
+  
+  viewer.addHandler('open', function() {
+    var tiledImage = viewer.world.getItemAt(0);
+    var imgWidth = tiledImage.getContentSize().x;
+    var imgHeight = tiledImage.getContentSize().y;
+    
+    console.log("Image dimensions in pixels:", imgWidth, imgHeight);
+
+  });
 
   viewer.addHandler('canvas-click', function(event) {
     // The canvas-click event gives us a position in web coordinates.
@@ -140,9 +162,10 @@
   (graphic) => {
     if (graphic) {    	
     console.log(graphic);
-    const imgDesc = graphic.attributes.image_desc;
-    const imgUrl = graphic.attributes.image_url;
+    //const imgDesc = graphic.attributes.image_desc;
+    //const imgUrl = graphic.attributes.image_url;
     const imgCoords = graphic.attributes.img_coords;
+    if (imgCoords != null) {
 
     const coordsArr = imgCoords.split(",");
     console.log(coordsArr);
@@ -203,6 +226,7 @@ viewer.viewport.fitBounds(bounds, true); // The second parameter enables smooth 
    // now that there is an overlay set the variable to true 
     overlay = true;
   }
+}
   });
 
   });
@@ -213,7 +237,7 @@ viewer.viewport.fitBounds(bounds, true); // The second parameter enables smooth 
   <nav class="navbar bg-body-tertiary">
   <div class="container-fluid">
     <a class="navbar-brand" href="#">
-      <img src="https://kett.geospatialresearch.mtu.edu/static/media/logo_mark_only@2x.a10ff43f.png" alt="Logo" width="40" height="40" class="d-inline-block align-text-top">
+      <img src="kettlogo.png" alt="Logo" width="50" height="50" class="d-inline-block align-text-top">
       Historic Building Image Viewer
     </a>
   </div>
@@ -223,7 +247,7 @@ viewer.viewport.fitBounds(bounds, true); // The second parameter enables smooth 
 
 <div class="offcanvas offcanvas-end" tabindex="-1" data-bs-scholl="true" data-bs-backdrop="false" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
   <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasRightLabel">Offcanvas right</h5>
+    <h5 class="offcanvas-title" id="offcanvasRightLabel"><div id="title"></div></h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body">
