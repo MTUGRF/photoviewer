@@ -36,12 +36,16 @@
 .navbar {
   height: 56px !important;
   --bs-navbar-padding-y: 0 !important;
-
 }
 
 .navbar-brand {
+  padding: 0 0px;
   color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;   
 }
+
 
 .bg-body-tertiary {
   background-color: #363636 !important; 
@@ -113,6 +117,7 @@
   const footprints_1908 = new FeatureLayer({
     url: "https://portal1-geo.sabu.mtu.edu/server/rest/services/Hosted/sanborn_1908_footprints_with_image_coords/FeatureServer/0",
     popupEnabled: true,
+    definitionExpression: "img_coords is not null",
     outFields: ["*"]
   });
 
@@ -160,11 +165,15 @@
  reactiveUtils.watch(
   () => view.popup.selectedFeature,
   (graphic) => {
-    if (graphic) {    	
+    if (graphic) {  
+    bsOffcanvas.show();  	
     console.log(graphic);
     //const imgDesc = graphic.attributes.image_desc;
     //const imgUrl = graphic.attributes.image_url;
     const imgCoords = graphic.attributes.img_coords;
+    const address = graphic.attributes.address;
+    const place_name = graphic.attributes.place_nam;
+
     if (imgCoords != null) {
 
     const coordsArr = imgCoords.split(",");
@@ -217,7 +226,7 @@ var deltaY = .2; // Example value, adjust based on how much area you want to sho
 var bounds = new OpenSeadragon.Rect(viewportPoint.x - deltaX, viewportPoint.y - deltaY, 2 * deltaX, 2 * deltaY);
 
 viewer.viewport.fitBounds(bounds, true); // The second parameter enables smooth animation
-
+document.getElementById("title").innerHTML = address + ", " + place_name;
 
 // Center the viewport on the point
 //viewer.viewport.panTo(viewportPoint, true);
@@ -238,12 +247,12 @@ viewer.viewport.fitBounds(bounds, true); // The second parameter enables smooth 
   <div class="container-fluid">
     <a class="navbar-brand" href="#">
       <img src="kettlogo.png" alt="Logo" width="50" height="50" class="d-inline-block align-text-top">
-      Historic Building Image Viewer
+      <span id="apptitle">Historic Building Image Viewer</span>
     </a>
   </div>
 </nav>
   <div id="viewDiv"></div>
-  <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>
+  <!-- <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button> -->
 
 <div class="offcanvas offcanvas-end" tabindex="-1" data-bs-scholl="true" data-bs-backdrop="false" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
   <div class="offcanvas-header">
