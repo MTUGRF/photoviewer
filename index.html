@@ -51,31 +51,70 @@
   background-color: #363636 !important; 
 }
 
-@keyframes pulseAnimation {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(2); /* Increase the size a bit */
-    opacity: 0.7; /* Slightly transparent */
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+.pulsing-dot{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 20px;
+    height: 20px;
+    background-color: rgb(255, 0, 0);
+    color: white;
+    text-align: center;
+    line-height: 100px;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    &:hover{
+        cursor: pointer;
+    }
+    &::after,&::before{
+        content: "";
+        display: block;
+        position: absolute;
+        top:0;
+        left:0;
+        width: 20px;
+        height: 20px;
+        background: rgba(255, 0, 0,1);
+        border-radius: 50%;
+        z-index: -1;
+        animation: grow 1.3s ease-in-out infinite;
+    }
+    &::after{
+        background: rgba(255, 0, 0,0.4);
+        &::before{
+        content: "";
+        display: block;
+        position: absolute;
+        top:0;
+        left:0;
+        width: 20px;
+        height: 20px;
+        background: rgb(95, 132, 255);
+        border-radius: 50%;
+        z-index: -1;
+        animation: grow 1.3s ease-in-out infinite;
+        }
+    }
+    &::before{
+        background: rgba(255, 0, 0,.6);
+        animation-delay: -0.5s;
+    }
+}
+@keyframes grow{
+    0%{
+        transform: scale(1,1);
+        opacity: 1;
+    }
+    100%{
+        transform: scale(1.8,1.8);
+        opacity: 0;
+    }
 }
 
-.pulsing-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: red;
-  position: absolute;
-  transform: translate(-50%, -50%); /* Center the dot */
-  animation: pulseAnimation 2s infinite; /* Use the defined animation */
-}ion: absolute;
-  }
+
+
   </style>
   <script>
   require([
@@ -183,7 +222,7 @@
 
     // if there is an overlay on the image, remove it
     if (overlay == true) {
-      viewer.removeOverlay("map-pin");        
+      viewer.removeOverlay("img-pin");        
     } 
 
     const tiledImage = viewer.world.getItemAt(0);
@@ -211,13 +250,14 @@
    // Create an HTML element for the dot
   var dot = document.createElement("div");
   dot.className = "pulsing-dot";
+  dot.id = "img-pin"
   
   // Adjust as necessary to center the dot over the point
   dot.style.transform = "translate(-50%, -50%)";
 
 // Add the overlay with normalized coordinates
 viewer.addOverlay({
-  element: pin,
+  element: dot,
   location: viewportPoint 
 });    
 
