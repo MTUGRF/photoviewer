@@ -126,6 +126,8 @@
     "esri/core/reactiveUtils"
   ], function(esriConfig, Map, MapView, FeatureLayer, TileLayer,  reactiveUtils) {
 
+    let highlight;
+
   const bsOffcanvas = new bootstrap.Offcanvas('#offcanvasRight')
 
   esriConfig.apiKey = "YOUR_API_KEY";
@@ -181,7 +183,85 @@
     
     console.log("Image dimensions in pixels:", imgWidth, imgHeight);
 
+    // Coordinates from your <area> tag
+    var x1 = 773, y1= 1757, width1 = 1234 - 773, height1 = 2139 - 1757;
+    var x2 = 420, y2= 1404, width2 = 972 - 420, height2 = 1732 - 1404;
+    var x3 = 1653, y3= 2086, width3 = 2461 - 1653, height3 = 2701 - 2086;
+
+
+
+    // Convert image pixel coordinates to viewport rectangle
+    var viewportRect1 = viewer.viewport.imageToViewportRectangle(x1, y1, width1, height1);
+    var viewportRect2 = viewer.viewport.imageToViewportRectangle(x2, y2, width2, height2);
+    var viewportRect3 = viewer.viewport.imageToViewportRectangle(x3, y3, width3, height3);
+
+    // Create an HTML element for the overlay
+    var overlay1 = document.createElement("div");
+    overlay1.style.border = "2px solid blue"; // Example styling
+
+    // Create an HTML element for the overlay
+    var overlay2 = document.createElement("div");
+    overlay2.style.border = "2px solid blue"; // Example styling
+
+    // Create an HTML element for the overlay
+    var overlay3 = document.createElement("div");
+    overlay3.style.border = "2px solid blue"; // Example styling
+
+    // Add overlay to the viewer
+    viewer.addOverlay({
+        element: overlay1,
+        location: viewportRect1
+    });
+
+     viewer.addOverlay({
+        element: overlay2,
+        location: viewportRect2
+    });
+
+      viewer.addOverlay({
+        element: overlay3,
+        location: viewportRect3
+    });
+
+      var obj1 = 2766;
+      var obj2 = 2845;
+
+      new OpenSeadragon.MouseTracker({
+        element: overlay1,
+        clickHandler: e =>  view.whenLayerView(footprints_1908).then((layerView) => { 
+            footprints_1908.queryFeatures({
+            //query object
+            where: 'objectid = 2766',
+            returnGeometry: true,
+            outFields: ["*"],
+          })
+          .then((featureSet) => {
+            console.log(featureSet);
+            const feature = featureSet.features[0];
+
+            view.goTo(
+                  {
+                    target: feature.geometry,                    
+                    zoom: 20,
+                  },
+                  {
+                  duration: 2000,
+                  easing: "in-out-expo"
+                })
+          });
+
+         layerView.highlight(2766)
+
+       }),
+        contextMenuHandler: e => alert('Context menu fired! ' + e.originalEvent.target.id),
+    });
+
   });
+
+viewer.addHandler('open', function() {
+});
+
+
 
   viewer.addHandler('canvas-click', function(event) {
     // The canvas-click event gives us a position in web coordinates.
