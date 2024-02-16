@@ -151,7 +151,7 @@
   const view = new MapView({
     container: "viewDiv",
     map: map,
-    center: [-88.461825, 47.246305],
+    center: [-88.461665, 47.247159],
     zoom: 18
   });
   
@@ -221,8 +221,8 @@
         location: viewportRect3
     });
 
-      var obj1 = 2766;
-      var obj2 = 2845;
+      var obj1 = 1887;
+      var obj2 = 1841;
       var obj3 = 976;
 
       new OpenSeadragon.MouseTracker({
@@ -234,7 +234,7 @@
             }    
             footprints_1908.queryFeatures({
             //query object
-            where: 'objectid = 2766',
+            where: 'objectid = 1887',
             returnGeometry: true,
             outFields: ["*"],
           })
@@ -257,7 +257,7 @@
 
             if (highlight) { highlight.remove(); }
 
-           highlight = layerView.highlight(2766);
+           highlight = layerView.highlight(1887);
             
        }),
         contextMenuHandler: e => alert('Context menu fired! ' + e.originalEvent.target.id),
@@ -272,7 +272,7 @@
             }    
             footprints_1908.queryFeatures({
             //query object
-            where: 'objectid = 2845',
+            where: 'objectid = 1841',
             returnGeometry: true,
             outFields: ["*"],
           })
@@ -295,7 +295,7 @@
 
           if (highlight) { highlight.remove(); }
 
-          highlight = layerView.highlight(2845)
+          highlight = layerView.highlight(1841)
        }),
         contextMenuHandler: e => alert('Context menu fired! ' + e.originalEvent.target.id),
       });
