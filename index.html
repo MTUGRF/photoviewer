@@ -113,8 +113,6 @@
     }
 }
 
-
-
   </style>
   <script>
   require([
@@ -182,59 +180,52 @@
     var imgHeight = tiledImage.getContentSize().y;
     
     console.log("Image dimensions in pixels:", imgWidth, imgHeight);
-    // This is an example, we can replace this code with a forEach loop //
-    // Coordinates from the <area> tag of the image map
-    var x1 = 773, y1= 1757, width1 = 1234 - 773, height1 = 2139 - 1757;
-    var x2 = 420, y2= 1404, width2 = 972 - 420, height2 = 1732 - 1404;
-    var x3 = 1653, y3= 2086, width3 = 2461 - 1653, height3 = 2701 - 2086;
+    // get data for the image overlay from the hosted table
+     fetch('https://portal1-geo.sabu.mtu.edu/server/rest/services/Hosted/image_map/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=*&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnCentroid=false&timeReferenceUnknownClient=false&sqlFormat=none&resultType=&datumTransformation=&lodType=geohash&lod=&lodSR=&f=pjson')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        const overlays = data.features;
+        // loop over all rows in the table and create overlays
+        overlays.forEach(function(overlay, index) {
+          const coordsArr = overlay.attributes.rect_coords; // the rectangles coordinates
+          const buildingId = overlay.attributes.building_id;
+          console.log(buildingId);
+          const rectCoords = coordsArr.split(",");
 
-    // Convert image pixel coordinates to viewport rectangle
-    var viewportRect1 = viewer.viewport.imageToViewportRectangle(x1, y1, width1, height1);
-    var viewportRect2 = viewer.viewport.imageToViewportRectangle(x2, y2, width2, height2);
-    var viewportRect3 = viewer.viewport.imageToViewportRectangle(x3, y3, width3, height3);
+          // convert to float values to work with OpenSeaDragon
+          const x1 = parseFloat(rectCoords[0]);
+          const y1 = parseFloat(rectCoords[1]);
+          const width1 = parseFloat(rectCoords[2]) - x1;
+          const height1 = parseFloat(rectCoords[3]) -y1;
 
-    // Create an HTML element for the overlay
-    var overlay1 = document.createElement("div");
-    overlay1.style.border = "2px solid blue"; // Example styling
+          // create the rectangle from these coords
+          var viewportRect = viewer.viewport.imageToViewportRectangle(x1, y1, width1, height1);
 
-    // Create an HTML element for the overlay
-    var overlay2 = document.createElement("div");
-    overlay2.style.border = "2px solid blue"; // Example styling
+          // Create an HTML element for the overlay
+          var overlay = document.createElement("div");
+          overlay.style.border = "2px solid blue"; // Example styling
 
-    // Create an HTML element for the overlay
-    var overlay3 = document.createElement("div");
-    overlay3.style.border = "2px solid blue"; // Example styling
+          // Set data-building-id attribute on the overlay element
+          overlay.setAttribute("data-building-id", buildingId);
+          console.log(buildingId);
 
-    // Add overlay to the viewer
-    viewer.addOverlay({
-        element: overlay1,
-        location: viewportRect1
-    });
-
-     viewer.addOverlay({
-        element: overlay2,
-        location: viewportRect2
-    });
-
-      viewer.addOverlay({
-        element: overlay3,
-        location: viewportRect3
-    });
-
-      var obj1 = 1887;
-      var obj2 = 1841;
-      var obj3 = 976;
-
-      new OpenSeadragon.MouseTracker({
-        element: overlay1,
-        clickHandler: e => view.whenLayerView(footprints_1908).then((layerView) => { 
+          // Add overlay to the viewer
+          viewer.addOverlay({
+              element: overlay,
+              location: viewportRect
+          });
+       // when the user clicks on an overlay
+       new OpenSeadragon.MouseTracker({
+        element: overlay,
+        clickHandler: e => view.whenLayerView(footprints_1908).then((layerView) => {            
              // if there is an overlay on the image, remove it
             if (overlay == true) {
               viewer.removeOverlay("img-pin");        
             }    
             footprints_1908.queryFeatures({
             //query object
-            where: 'objectid = 1887',
+            where: "uniqueid = " + "'" + buildingId + "'",  // "'" + overlay.attributes.building_id + "'",
             returnGeometry: true,
             outFields: ["*"],
           })
@@ -244,43 +235,10 @@
 
             document.getElementById("title").innerHTML = feature.attributes.address + ", " + feature.attributes.place_nam;
 
-            view.goTo(
-                  {
-                    target: feature.geometry,                    
-                    zoom: 20,
-                  },
-                  {
-                  duration: 2000,
-                  easing: "in-out-expo"
-                })
-            });
-
             if (highlight) { highlight.remove(); }
 
-           highlight = layerView.highlight(1887);
+           highlight = layerView.highlight(feature.attributes.objectid);
             
-       }),
-        contextMenuHandler: e => alert('Context menu fired! ' + e.originalEvent.target.id),
-      });
-
-      new OpenSeadragon.MouseTracker({
-        element: overlay2,
-        clickHandler: e =>  view.whenLayerView(footprints_1908).then((layerView) => { 
-             // if there is an overlay on the image, remove it
-            if (overlay == true) {
-              viewer.removeOverlay("img-pin");        
-            }    
-            footprints_1908.queryFeatures({
-            //query object
-            where: 'objectid = 1841',
-            returnGeometry: true,
-            outFields: ["*"],
-          })
-          .then((featureSet) => {
-            console.log(featureSet);
-            const feature = featureSet.features[0];
-
-            document.getElementById("title").innerHTML = feature.attributes.address + ", " + feature.attributes.place_nam;
 
             view.goTo(
                   {
@@ -291,51 +249,14 @@
                   duration: 2000,
                   easing: "in-out-expo"
                 })
-            });
-
-          if (highlight) { highlight.remove(); }
-
-          highlight = layerView.highlight(1841)
+            });            
        }),
         contextMenuHandler: e => alert('Context menu fired! ' + e.originalEvent.target.id),
-      });
+      }); 
+   
+        });
 
-      new OpenSeadragon.MouseTracker({
-        element: overlay3,
-        clickHandler: e =>  view.whenLayerView(footprints_1908).then((layerView) => { 
-             // if there is an overlay on the image, remove it
-            if (overlay == true) {
-              viewer.removeOverlay("img-pin");        
-            }    
-            footprints_1908.queryFeatures({
-            //query object
-            where: 'objectid = 976',
-            returnGeometry: true,
-            outFields: ["*"],
-          })
-          .then((featureSet) => {
-            console.log(featureSet);
-            const feature = featureSet.features[0];
-
-            document.getElementById("title").innerHTML = feature.attributes.address + ", " + feature.attributes.place_nam;
-
-            view.goTo(
-                  {
-                    target: feature.geometry,                    
-                    zoom: 20,
-                  },
-                  {
-                  duration: 2000,
-                  easing: "in-out-expo"
-                })
-            });
-
-            if (highlight) { highlight.remove(); }
-
-            highlight = layerView.highlight(976)
-       }),
-        contextMenuHandler: e => alert('Context menu fired! ' + e.originalEvent.target.id),
-      });
+      });  
 
   });
 
@@ -361,76 +282,71 @@
   () => view.popup.selectedFeature,
   (graphic) => {
     if (graphic) {  
-    if (highlight) { highlight.remove(); }
-    bsOffcanvas.show();  	
-    console.log(graphic);
-    //const imgDesc = graphic.attributes.image_desc;
-    //const imgUrl = graphic.attributes.image_url;
-    const imgCoords = graphic.attributes.img_coords;
-    const address = graphic.attributes.address;
-    const place_name = graphic.attributes.place_nam;
+      if (highlight) { highlight.remove(); }
+      bsOffcanvas.show();  	
+      console.log(graphic);
+      //const imgDesc = graphic.attributes.image_desc;
+      //const imgUrl = graphic.attributes.image_url;
+      const imgCoords = graphic.attributes.img_coords;
+      const address = graphic.attributes.address;
+      const place_name = graphic.attributes.place_nam;
 
-    if (imgCoords != null) {
+      if (imgCoords != null) {
 
-    const coordsArr = imgCoords.split(",");
-    console.log(coordsArr);
+      const coordsArr = imgCoords.split(",");
+      console.log(coordsArr);
 
-    console.log(overlay);
+      console.log(overlay);
 
-    // if there is an overlay on the image, remove it
-    if (overlay == true) {
-      viewer.removeOverlay("img-pin");        
-    } 
+      // if there is an overlay on the image, remove it
+      if (overlay == true) {
+        viewer.removeOverlay("img-pin");        
+      } 
 
-    const tiledImage = viewer.world.getItemAt(0);
+      const tiledImage = viewer.world.getItemAt(0);
 
-    // Convert string values to floats
-    const imageX = parseFloat(coordsArr[0]);
-    const imageY = parseFloat(coordsArr[1]);
+      // Convert string values to floats
+      const imageX = parseFloat(coordsArr[0]);
+      const imageY = parseFloat(coordsArr[1]);
 
-    console.log(imageX, imageY);
+      console.log(imageX, imageY);
 
- // Convert the image coordinates to viewport coordinates
- var viewportPoint = tiledImage.imageToViewportCoordinates(new OpenSeadragon.Point(imageX, imageY));
+      // Convert the image coordinates to viewport coordinates
+      var viewportPoint = tiledImage.imageToViewportCoordinates(new OpenSeadragon.Point(imageX, imageY));
 
- // Create an HTML element for the pin
-  var pin = document.createElement("img");
-  pin.src = "https://upload.wikimedia.org/wikipedia/commons/d/d1/Google_Maps_pin.svg"; // URL to the map marker pin image
-  pin.id = "map-pin";
-  pin.className = "highlight";
+      // Create an HTML element for the pin
+      var pin = document.createElement("img");
+      pin.src = "https://upload.wikimedia.org/wikipedia/commons/d/d1/Google_Maps_pin.svg"; // URL to the map marker pin image
+      pin.id = "map-pin";
+      pin.className = "highlight"; 
 
-   // Style your pin as needed (optional)
- // pin.style.width = "32px"; // Example size, adjust as needed
- // pin.style.height = "32px";
- // pin.style.transform = "translate(-50%, -100%)"; // Adjust the pin position relative to the point
+       // Create an HTML element for the dot
+      var dot = document.createElement("div");
+      dot.className = "pulsing-dot";
+      dot.id = "img-pin"
+      
+      // Adjust as necessary to center the dot over the point
+      dot.style.transform = "translate(-50%, -50%)";
 
-   // Create an HTML element for the dot
-  var dot = document.createElement("div");
-  dot.className = "pulsing-dot";
-  dot.id = "img-pin"
-  
-  // Adjust as necessary to center the dot over the point
-  dot.style.transform = "translate(-50%, -50%)";
+    // Add the overlay with normalized coordinates
+    viewer.addOverlay({
+      element: dot,
+      location: viewportPoint 
+    });    
 
-// Add the overlay with normalized coordinates
-viewer.addOverlay({
-  element: dot,
-  location: viewportPoint 
-});    
+  var deltaX = .2; // Example value, adjust based on how much area you want to show
+  var deltaY = .2; // Example value, adjust based on how much area you want to show
+  var bounds = new OpenSeadragon.Rect(viewportPoint.x - deltaX, viewportPoint.y - deltaY, 2 * deltaX, 2 * deltaY);
 
-var deltaX = .2; // Example value, adjust based on how much area you want to show
-var deltaY = .2; // Example value, adjust based on how much area you want to show
-var bounds = new OpenSeadragon.Rect(viewportPoint.x - deltaX, viewportPoint.y - deltaY, 2 * deltaX, 2 * deltaY);
+  viewer.viewport.fitBounds(bounds, true); // The second parameter enables smooth animation
+  document.getElementById("title").innerHTML = address + ", " + place_name;
 
-viewer.viewport.fitBounds(bounds, true); // The second parameter enables smooth animation
-document.getElementById("title").innerHTML = address + ", " + place_name;
-
-// Center the viewport on the point
-//viewer.viewport.panTo(viewportPoint, true);
-// zoom to the point on the image
-//viewer.viewport.zoomTo(2, viewportPoint, true);
-   // now that there is an overlay set the variable to true 
-    overlay = true;
+  // Center the viewport on the point
+  //viewer.viewport.panTo(viewportPoint, true);
+  // zoom to the point on the image
+  //viewer.viewport.zoomTo(2, viewportPoint, true);
+     // now that there is an overlay set the variable to true 
+      overlay = true;
   }
 }
   });
